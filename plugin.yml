@@ -17,5 +17,9 @@ configuration:
       type: string
     add-host:
       type: [array, string]
+    cache-from:
+      type: [array, string]
+    tags:
+      type: [array, string]
 
   required: []

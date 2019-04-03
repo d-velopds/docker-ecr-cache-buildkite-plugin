@@ -32,6 +32,27 @@ read_build_args() {
   done
 }
 
+read_cache_tag() {
+  read_list_property 'CACHE_FROM'
+  for arg in ${result[@]+"${result[@]}"}; do
+    cache_tag+=("${arg}")
+  done
+}
+
+read_cache_from() {
+  read_list_property 'CACHE_FROM'
+  for arg in ${result[@]+"${result[@]}"}; do
+    cache_from+=('--cache-from' "${image}:${arg}")
+  done
+}
+
+read_tags() {
+  read_list_property 'TAGS'
+  for arg in ${result[@]+"${result[@]}"}; do
+    tags+=("${arg}")
+  done
+}
+
 read_add_host() {
   read_list_property 'ADD_HOST'
   for arg in ${result[@]+"${result[@]}"}; do
@@ -98,15 +119,27 @@ fi
 build_args=()
 read_build_args
 
+cache_from=()
+read_cache_from
+
+cache_tag=()
+read_cache_tag
+
 add_host=()
 read_add_host
 
 if ! docker pull "${image}:${tag}"; then
+  echo '--- Pulling images from cache'
+  for arg in ${cache_tag[@]+"${cache_tag[@]}"}; do
+    docker pull "${image}:${arg}"
+  done
+
   echo '--- Building image'
   docker build \
   --file "${docker_file}" \
   --tag "${image}:${tag}" \
   ${add_host[@]+"${add_host[@]}"} \
+  ${cache_from[@]+"${cache_from[@]}"} \
   ${build_args[@]+"${build_args[@]}"} \
   ${target_args[@]+"${target_args[@]}"} \
   . || exit 1
@@ -118,6 +151,14 @@ if ! docker pull "${image}:${tag}"; then
 
   echo "--- Pushing tag latest"
   docker push "${image}:latest"
+
+  echo "--- Pushing additional tags"
+  tags=()
+  read_tags
+  for extra_tag in ${tags[@]+"${tags[@]}"}; do
+    docker tag "${image}:${tag}" "${image}:${extra_tag}"
+    docker push "${image}:${extra_tag}"
+  done
 fi || echo "Not found"
 
 # Support using https://github.com/buildkite-plugins/docker-buildkite-plugin without an image
