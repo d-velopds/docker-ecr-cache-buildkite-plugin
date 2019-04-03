@@ -32,6 +32,13 @@ read_build_args() {
   done
 }
 
+read_add_host() {
+  read_list_property 'ADD_HOST'
+  for arg in ${result[@]+"${result[@]}"}; do
+    add_host+=('--add-host' "${arg}")
+  done
+}
+
 # read a plugin property of type [array, string] into a Bash array. Buildkite
 # exposes a string value at BUILDKITE_PLUGIN_{NAME}_{KEY}, and array values at
 # BUILDKITE_PLUGIN_{NAME}_{KEY}_{IDX}.
@@ -91,11 +98,15 @@ fi
 build_args=()
 read_build_args
 
+add_host=()
+read_add_host
+
 if ! docker pull "${image}:${tag}"; then
   echo '--- Building image'
   docker build \
   --file "${docker_file}" \
   --tag "${image}:${tag}" \
+  ${add_host[@]+"${add_host[@]}"} \
   ${build_args[@]+"${build_args[@]}"} \
   ${target_args[@]+"${target_args[@]}"} \
   . || exit 1

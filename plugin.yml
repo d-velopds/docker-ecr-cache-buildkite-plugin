@@ -15,4 +15,7 @@ configuration:
       type: string
     target:
       type: string
+    add-host:
+      type: [array, string]
+
   required: []
