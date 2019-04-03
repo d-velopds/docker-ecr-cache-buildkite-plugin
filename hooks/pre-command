@@ -148,18 +148,18 @@ if ! docker pull "${image}:${tag}"; then
 
   echo "--- Pushing tag ${tag}"
   docker push "${image}:${tag}"
-
-  echo "--- Pushing tag latest"
-  docker push "${image}:latest"
-
-  echo "--- Pushing additional tags"
-  tags=()
-  read_tags
-  for extra_tag in ${tags[@]+"${tags[@]}"}; do
-    docker tag "${image}:${tag}" "${image}:${extra_tag}"
-    docker push "${image}:${extra_tag}"
-  done
 fi || echo "Not found"
+
+echo "--- Pushing tag latest"
+docker push "${image}:latest"
+
+echo "--- Pushing additional tags"
+tags=()
+read_tags
+for extra_tag in ${tags[@]+"${tags[@]}"}; do
+  docker tag "${image}:${tag}" "${image}:${extra_tag}"
+  docker push "${image}:${extra_tag}"
+done
 
 # Support using https://github.com/buildkite-plugins/docker-buildkite-plugin without an image
 export BUILDKITE_PLUGIN_DOCKER_IMAGE="${image}:${tag}"
