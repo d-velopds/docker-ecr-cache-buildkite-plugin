@@ -144,13 +144,12 @@ if ! docker pull "${image}:${tag}"; then
   ${target_args[@]+"${target_args[@]}"} \
   . || exit 1
 
-  docker tag "${image}:${tag}" "${image}:latest"
-
   echo "--- Pushing tag ${tag}"
   docker push "${image}:${tag}"
 fi || echo "Not found"
 
 echo "--- Pushing tag latest"
+docker tag "${image}:${tag}" "${image}:latest"
 docker push "${image}:latest"
 
 echo "--- Pushing additional tags"
